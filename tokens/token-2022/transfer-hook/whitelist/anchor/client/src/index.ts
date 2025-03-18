@@ -14,11 +14,12 @@ program
   });
 
 program
-  .command('transfer <destination> <amount> <decimals>')
+  .command('transfer <mint> <destination> <amount> <decimals>')
   .description('Transfer tokens with transfer hook')
-  .action(async (destination, amount, decimals) => {
+  .action(async (mint, destination, amount, decimals) => {
+    const mintPubkey = new PublicKey(mint);
     const destPubkey = new PublicKey(destination);
-    await transfer(destPubkey, Number(amount), Number(decimals));
+    await transfer(mintPubkey, destPubkey, Number(amount), Number(decimals));
   });
 
 program.parse(process.argv);

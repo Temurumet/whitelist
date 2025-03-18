@@ -1,18 +1,28 @@
 import { connection } from '../utils/connection';
 import { walletKeypair } from '../utils/keys';
 import { PublicKey, Transaction } from '@solana/web3.js';
-import { Program, Provider, web3 } from '@coral-xyz/anchor';
+import { Program, AnchorProvider } from '@coral-xyz/anchor';
 import { TransferHook } from '../../target/types/transfer_hook';
 import idl from '../../target/idl/transfer_hook.json';
-import { createTransferCheckedWithTransferHookInstruction } from '@solana/spl-token';
+import { 
+  createTransferCheckedWithTransferHookInstruction, 
+  getAssociatedTokenAddress,
+  TOKEN_2022_PROGRAM_ID,
+  ASSOCIATED_TOKEN_PROGRAM_ID
+} from '@solana/spl-token';
 
 const programId = new PublicKey(idl.metadata.address);
-const provider = new Provider(connection, walletKeypair, {});
+const provider = new AnchorProvider(connection, walletKeypair, {});
 const program = new Program(idl as any, programId, provider) as Program<TransferHook>;
 
-export const transfer = async (destination: PublicKey, amount: number, decimals: number) => {
+export const transfer = async (
+  mintAddress: PublicKey,
+  destination: PublicKey, 
+  amount: number, 
+  decimals: number
+) => {
   const [extraAccountMetaListPDA] = await PublicKey.findProgramAddress(
-    [Buffer.from('extra-account-metas'), mint.publicKey.toBuffer()],
+    [Buffer.from('extra-account-metas'), mintAddress.toBuffer()],
     program.programId
   );
 
@@ -22,7 +32,7 @@ export const transfer = async (destination: PublicKey, amount: number, decimals:
   );
 
   const sourceTokenAccount = await getAssociatedTokenAddress(
-    mint.publicKey,
+    mintAddress,
     walletKeypair.publicKey,
     false,
     TOKEN_2022_PROGRAM_ID,
@@ -30,7 +40,7 @@ export const transfer = async (destination: PublicKey, amount: number, decimals:
   );
 
   const destinationTokenAccount = await getAssociatedTokenAddress(
-    mint.publicKey,
+    mintAddress,
     destination,
     false,
     TOKEN_2022_PROGRAM_ID,
@@ -40,7 +50,7 @@ export const transfer = async (destination: PublicKey, amount: number, decimals:
   const transferInstruction = await createTransferCheckedWithTransferHookInstruction(
     connection,
     sourceTokenAccount,
-    mint.publicKey,
+    mintAddress,
     destinationTokenAccount,
     walletKeypair.publicKey,
     amount,

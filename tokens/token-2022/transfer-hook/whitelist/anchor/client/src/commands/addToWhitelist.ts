@@ -1,12 +1,12 @@
 import { connection } from '../utils/connection';
 import { walletKeypair } from '../utils/keys';
 import { PublicKey, Transaction } from '@solana/web3.js';
-import { Program, Provider, web3 } from '@coral-xyz/anchor';
+import { Program, AnchorProvider } from '@coral-xyz/anchor';
 import { TransferHook } from '../../target/types/transfer_hook';
 import idl from '../../target/idl/transfer_hook.json';
 
 const programId = new PublicKey(idl.metadata.address);
-const provider = new Provider(connection, walletKeypair, {});
+const provider = new AnchorProvider(connection, walletKeypair, {});
 const program = new Program(idl as any, programId, provider) as Program<TransferHook>;
 
 export const addToWhitelist = async (newAccount: PublicKey) => {
