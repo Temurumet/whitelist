@@ -241,4 +241,25 @@ describe('transfer-hook', () => {
       throw new Error("Invalid token balances after transfer");
     }
   });
+
+  it('6. Add specific account to whitelist via CLI', async () => {
+    const specificAccount = new anchor.web3.PublicKey('9JpR9tq25e9DwJPrv8KaXCtUHZ9P193brHQs4ru2z5Gn');
+    
+    const [whiteListPDA] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("whitelist")],
+      program.programId
+    );
+    
+    const tx = await program.methods
+      .addToWhitelist()
+      .accounts({
+        newAccount: specificAccount,
+        whiteList: whiteListPDA,
+        authority: wallet.publicKey,
+      })
+      .transaction();
+    
+    const txSig = await sendAndConfirmTransaction(connection, tx, [wallet.payer]);
+    console.log(`Added specific account to Whitelist: ${txSig}`);
+  });
 });
