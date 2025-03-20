@@ -244,21 +244,31 @@ describe('transfer-hook', () => {
 
   it('6. Add specific account to whitelist via CLI', async () => {
     const specificAccount = new anchor.web3.PublicKey('9JpR9tq25e9DwJPrv8KaXCtUHZ9P193brHQs4ru2z5Gn');
-    
+      
+    // Отладочная информация
+    const [oldPDA] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("white_list")],
+      program.programId
+    );
+      
     const [whiteListPDA] = anchor.web3.PublicKey.findProgramAddressSync(
       [Buffer.from("whitelist")],
       program.programId
     );
-    
+      
+    console.log("Old PDA (white_list):", oldPDA.toString());
+    console.log("New PDA (whitelist):", whiteListPDA.toString());
+    console.log("Using PDA:", whiteListPDA.toString());
+      
     const tx = await program.methods
       .addToWhitelist()
       .accounts({
         newAccount: specificAccount,
-        whiteList: whiteListPDA,
+        white_list: whiteListPDA, // Убедитесь, что здесь используется правильный PDA
         authority: wallet.publicKey,
       })
       .transaction();
-    
+      
     const txSig = await sendAndConfirmTransaction(connection, tx, [wallet.payer]);
     console.log(`Added specific account to Whitelist: ${txSig}`);
   });

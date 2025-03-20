@@ -1,7 +1,7 @@
 import { connection } from '../utils/connection';
 import { walletKeypair } from '../utils/keys';
-import { PublicKey, Transaction, SystemProgram } from '@solana/web3.js';
-import { Program, AnchorProvider, BN, web3 } from '@coral-xyz/anchor';
+import { PublicKey, Transaction } from '@solana/web3.js';
+import { Program, AnchorProvider, web3 } from '@coral-xyz/anchor';
 import { IDL, PROGRAM_ID } from '../idl/program';
 
 // Создаем провайдера с правильными типами
@@ -30,6 +30,7 @@ export const addToWhitelist = async (newAccount: PublicKey) => {
   try {
     console.log(`Adding account ${newAccount.toString()} to whitelist...`);
     
+    // Изменяем метод нахождения PDA с "whitelist" вместо "white_list"
     const [whiteListPDA] = PublicKey.findProgramAddressSync(
       [Buffer.from('whitelist')],
       PROGRAM_ID
@@ -41,7 +42,7 @@ export const addToWhitelist = async (newAccount: PublicKey) => {
       .addToWhitelist()
       .accounts({
         newAccount: newAccount,
-        whiteList: whiteListPDA,
+        whiteList: whiteListPDA, // Имя должно соответствовать Rust-структуре
         authority: walletKeypair.publicKey,
       })
       .transaction();

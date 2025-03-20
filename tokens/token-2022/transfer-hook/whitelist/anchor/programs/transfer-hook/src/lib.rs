@@ -54,6 +54,7 @@ pub mod transfer_hook {
         check_is_transferring(&ctx)?;
 
         if !ctx.accounts.white_list.white_list.contains(&ctx.accounts.destination_token.key()) {
+            msg!("Account not in white list: {}", ctx.accounts.destination_token.key().to_string());
             panic!("Account not in white list!");
         }
 
@@ -63,10 +64,17 @@ pub mod transfer_hook {
     }
 
     pub fn add_to_whitelist(ctx: Context<AddToWhiteList>) -> Result<()> {
+        // Добавляем проверку, что аккаунт ещё не в белом списке
+        let account_key = ctx.accounts.new_account.key();
+        
+        if ctx.accounts.white_list.white_list.contains(&account_key) {
+            msg!("Account already in whitelist: {}", account_key.to_string());
+            return Ok(());
+        }
 
-        ctx.accounts.white_list.white_list.push(ctx.accounts.new_account.key());
-        msg!("New account white listed! {0}", ctx.accounts.new_account.key().to_string());
-        msg!("White list length! {0}", ctx.accounts.white_list.white_list.len());
+        ctx.accounts.white_list.white_list.push(account_key);
+        msg!("New account white listed! {}", account_key.to_string());
+        msg!("White list length! {}", ctx.accounts.white_list.white_list.len());
 
         Ok(())
     }
@@ -74,8 +82,8 @@ pub mod transfer_hook {
 
 fn check_is_transferring(ctx: &Context<TransferHook>) -> Result<()> {
     let source_token_info = ctx.accounts.source_token.to_account_info();
-    let mut account_data_ref: RefMut<&mut [u8]> = source_token_info.try_borrow_mut_data()?;
-    let mut account = PodStateWithExtensionsMut::<PodAccount>::unpack(*account_data_ref)?;
+    let account_data_ref: RefMut<&mut [u8]> = source_token_info.try_borrow_mut_data()?;
+    let mut account = PodStateWithExtensionsMut::<PodAccount>::unpack(account_data_ref)?;
     let account_extension = account.get_extension_mut::<TransferHookAccount>()?;
 
     if !bool::from(account_extension.transferring) {
@@ -103,7 +111,9 @@ pub struct InitializeExtraAccountMetaList<'info> {
     pub extra_account_meta_list: AccountInfo<'info>,
     pub mint: InterfaceAccount<'info, Mint>,
     pub system_program: Program<'info, System>,
-    #[account(init_if_needed, seeds = [b"white_list"], bump, payer = payer, space = 400)]
+    
+    // Изменяем seeds с b"white_list" на b"whitelist" для согласованности
+    #[account(init_if_needed, seeds = [b"whitelist"], bump, payer = payer, space = 400)]
     pub white_list: Account<'info, WhiteList>,
 }
 
@@ -115,7 +125,8 @@ impl<'info> InitializeExtraAccountMetaList<'info> {
                 ExtraAccountMeta::new_with_seeds(
                     &[
                         Seed::Literal {
-                            bytes: "white_list".as_bytes().to_vec(),
+                            // Изменяем bytes с "white_list" на "whitelist" для согласованности
+                            bytes: "whitelist".as_bytes().to_vec(),
                         },
                     ],
                     false, // is_signer
@@ -142,7 +153,9 @@ pub struct TransferHook<'info> {
     /// CHECK: ExtraAccountMetaList Account,
     #[account(seeds = [b"extra-account-metas", mint.key().as_ref()], bump)]
     pub extra_account_meta_list: UncheckedAccount<'info>,
-    #[account(seeds = [b"white_list"], bump)]
+    
+    // Изменяем seeds с b"white_list" на b"whitelist" для согласованности
+    #[account(seeds = [b"whitelist"], bump)]
     pub white_list: Account<'info, WhiteList>,
 }
 
@@ -151,9 +164,10 @@ pub struct AddToWhiteList<'info> {
     /// CHECK: We only need the pubkey for whitelisting
     pub new_account: UncheckedAccount<'info>,
     
+    // Изменяем seeds с b"white_list" на b"whitelist" для согласованности
     #[account(
         mut, 
-        seeds = [b"white_list"], 
+        seeds = [b"whitelist"], 
         bump,
         has_one = authority
     )]

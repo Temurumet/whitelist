@@ -190,7 +190,7 @@ async function addToWhitelist(newAccount) {
       console.log('Warning: Your wallet balance is very low!');
     }
     
-    // Получаем PDA для белого списка
+    // Получаем PDA для белого списка - ВАЖНО: используем "whitelist", а не "white_list"
     const [whiteListPDA] = anchor.web3.PublicKey.findProgramAddressSync(
       [Buffer.from('whitelist')],
       PROGRAM_ID
@@ -203,7 +203,7 @@ async function addToWhitelist(newAccount) {
       .addToWhitelist()
       .accounts({
         newAccount: newAccount,
-        whiteList: whiteListPDA,
+        whiteList: whiteListPDA, // Имя должно соответствовать Rust-структуре
         authority: walletKeypair.publicKey,
       })
       .transaction();

@@ -2,8 +2,26 @@ import { Command } from 'commander';
 import { addToWhitelist } from './commands/addToWhitelist';
 import { transfer } from './commands/transfer';
 import { PublicKey } from '@solana/web3.js';
+import { connection } from './utils/connection';
+import { walletKeypair } from './utils/keys';
 
 const program = new Command();
+
+// Добавляем информацию о текущем кошельке
+program
+  .command('wallet-info')
+  .description('Показать информацию о текущем кошельке')
+  .action(async () => {
+    try {
+      const publicKey = walletKeypair.publicKey;
+      const balance = await connection.getBalance(publicKey);
+      console.log(`Адрес кошелька: ${publicKey.toString()}`);
+      console.log(`Баланс: ${balance / 1_000_000_000} SOL`);
+    } catch (error) {
+      console.error('Ошибка при получении информации о кошельке:', error);
+      process.exit(1);
+    }
+  });
 
 program
   .command('add-to-whitelist <account>')

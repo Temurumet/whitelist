@@ -41,6 +41,7 @@ export const transfer = async (
   try {
     console.log(`Transferring ${amount} tokens from ${mintAddress.toString()} to ${destination.toString()}...`);
     
+    // Изменяем метод нахождения PDA с "whitelist" вместо "white_list"
     const [extraAccountMetaListPDA] = PublicKey.findProgramAddressSync(
       [Buffer.from('extra-account-metas'), mintAddress.toBuffer()],
       PROGRAM_ID
